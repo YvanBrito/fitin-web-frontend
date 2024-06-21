@@ -54,14 +54,7 @@ export const submitSignup = async (
   const json = await res.json()
 
   if (res.ok) {
-    cookies().set('Authorization', 'token', {
-      secure: true,
-      httpOnly: true,
-      expires: Date.now() + 24 * 60 * 60 * 1000 * 3,
-      path: '/',
-      sameSite: 'strict',
-    })
-    redirect('/app')
+    redirect('/signin')
   } else {
     return {
       message: json.message,

@@ -24,7 +24,7 @@ export const submitLogin = async (
   const json = await res.json()
 
   if (res.ok) {
-    cookies().set('Authorization', 'token', {
+    cookies().set('Authorization', json.access_token, {
       secure: true,
       httpOnly: true,
       expires: Date.now() + 24 * 60 * 60 * 1000 * 3,
