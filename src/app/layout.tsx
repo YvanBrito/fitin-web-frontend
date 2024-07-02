@@ -5,6 +5,7 @@ import theme from '../theme'
 import './globals.css'
 import Header from '../components/header'
 import Footer from '../components/footer'
+import ToastProvider from '../lib/react-toastify/toast-provider'
 
 export const metadata: Metadata = {
   title: 'FitIn - Lifestyle',
@@ -21,9 +22,11 @@ export default function RootLayout({
       <body>
         <AppRouterCacheProvider>
           <ThemeProvider theme={theme}>
-            <Header />
-            {children}
-            <Footer />
+            <ToastProvider>
+              <Header />
+              {children}
+              <Footer />
+            </ToastProvider>
           </ThemeProvider>
         </AppRouterCacheProvider>
       </body>

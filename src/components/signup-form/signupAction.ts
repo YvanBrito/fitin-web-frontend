@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 import { SignUpFormValues } from '.'
 
 export type FormState = {
+  type: 'success' | 'error'
   message: string
   fields?: SignUpFormValues
 }
@@ -25,6 +26,7 @@ export const submitSignup = async (
 
   if (password !== passwordrepeat)
     return {
+      type: 'error',
       message: 'As senhas estão diferentes',
       fields: {
         username: username.toString(),
@@ -36,28 +38,43 @@ export const submitSignup = async (
         phone: phone.toString(),
       },
     }
+  try {
+    const res = await fetch(process.env.ROOT_URL + '/auth/signup', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        username,
+        password,
+        name,
+        birthdate: birthdate.toString().split('/').reverse().join('-'),
+        document,
+        phone,
+      }),
+    })
 
-  const res = await fetch(process.env.ROOT_URL + '/auth/signup', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      username,
-      password,
-      name,
-      birthdate: birthdate.toString().split('/').reverse().join('-'),
-      document,
-      phone,
-    }),
-  })
-  const json = await res.json()
-
-  if (res.ok) {
-    redirect('/signin')
-  } else {
+    if (!res.ok) {
+      const json = await res.json()
+      return {
+        type: 'error',
+        message: json.message,
+        fields: {
+          username: username.toString(),
+          password: password.toString(),
+          passwordrepeat: passwordrepeat.toString(),
+          name: name.toString(),
+          birthdate: birthdate.toString(),
+          document: document.toString(),
+          phone: phone.toString(),
+        },
+      }
+    }
+  } catch (e: unknown) {
+    const error = e as Error
     return {
-      message: json.message,
+      type: 'error',
+      message: error.message,
       fields: {
         username: username.toString(),
         password: password.toString(),
@@ -68,6 +85,20 @@ export const submitSignup = async (
         phone: phone.toString(),
       },
     }
+  }
+
+  return {
+    type: 'success',
+    message: 'Conta cadastrada com sucesso!',
+    fields: {
+      username: username.toString(),
+      password: password.toString(),
+      passwordrepeat: passwordrepeat.toString(),
+      name: name.toString(),
+      birthdate: birthdate.toString(),
+      document: document.toString(),
+      phone: phone.toString(),
+    },
   }
 }
 

@@ -12,10 +12,11 @@ import {
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined'
 import { Controller, useForm } from 'react-hook-form'
 import { joiResolver } from '@hookform/resolvers/joi'
-import { LoadingButton } from '@mui/lab'
-import { useRef } from 'react'
-import { useFormState, useFormStatus } from 'react-dom'
+import { useEffect, useRef } from 'react'
+import { useFormState } from 'react-dom'
+import { useRouter } from 'next/navigation'
 import { loginSchema } from '@/src/schemas/login-schema'
+import { showToast } from '@/src/utils/show-toast'
 import { submitLogin } from './loginAction'
 import { SubmitBtn } from '../submit-btn'
 
@@ -25,7 +26,11 @@ export interface LoginFormValues {
 }
 
 export default function LoginForm() {
-  const [state, formAction] = useFormState(submitLogin, { message: '' })
+  const router = useRouter()
+  const [state, formAction] = useFormState(submitLogin, {
+    type: 'error',
+    message: '',
+  })
   const {
     control,
     formState: { errors },
@@ -40,6 +45,11 @@ export default function LoginForm() {
   })
 
   const formRef = useRef<HTMLFormElement>(null)
+
+  useEffect(() => {
+    if (state.message) showToast(state.type, <p>{state.message}</p>)
+    if (state.type === 'success') router.push('/app')
+  }, [router, state])
 
   return (
     <Container maxWidth="xs" className="mb-40">
@@ -109,9 +119,6 @@ export default function LoginForm() {
             <p className="text-red-500">{errors.password.message}</p>
           )}
         </Box>
-        {state?.message !== '' && (
-          <div className="text-red-500">{state.message}</div>
-        )}
         <SubmitBtn label="ENTRAR" />
         <Grid container>
           <Grid item xs>

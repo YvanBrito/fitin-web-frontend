@@ -2,11 +2,8 @@
 import {
   Avatar,
   Box,
-  Button,
   Container,
   CssBaseline,
-  Grid,
-  Link,
   TextField,
   Typography,
 } from '@mui/material'
@@ -16,9 +13,11 @@ import { joiResolver } from '@hookform/resolvers/joi'
 import { signUpSchema } from '@/src/schemas/signup-schema'
 import { submitSignup } from './signupAction'
 import { useFormState } from 'react-dom'
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import InputMask from 'react-input-mask'
 import { SubmitBtn } from '../submit-btn'
+import { showToast } from '@/src/utils/show-toast'
+import { useRouter } from 'next/navigation'
 
 export interface SignUpFormValues {
   username: string
@@ -31,7 +30,11 @@ export interface SignUpFormValues {
 }
 
 export default function SignUpForm() {
-  const [state, formAction] = useFormState(submitSignup, { message: '' })
+  const router = useRouter()
+  const [state, formAction] = useFormState(submitSignup, {
+    type: 'error',
+    message: '',
+  })
   const {
     control,
     trigger,
@@ -52,6 +55,11 @@ export default function SignUpForm() {
 
   const formRef = useRef<HTMLFormElement>(null)
 
+  useEffect(() => {
+    if (state.message) showToast(state.type, <p>{state.message}</p>)
+    if (state.type === 'success') router.push('/signin')
+  }, [router, state])
+
   return (
     <Container maxWidth="xs" className="mb-40">
       <CssBaseline />
@@ -65,10 +73,10 @@ export default function SignUpForm() {
         }}
         component="form"
         ref={formRef}
-        action={(data) => {
+        action={async (data) => {
           const isError = signUpSchema.validate(Object.fromEntries(data))?.error
           trigger()
-          if (!isError) formAction(data)
+          if (!isError) await formAction(data)
         }}
       >
         <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
@@ -132,7 +140,6 @@ export default function SignUpForm() {
                 onChange={field.onChange}
                 onBlur={field.onBlur}
                 disabled={false}
-                maskChar=" "
               >
                 <TextField
                   {...field}
@@ -162,7 +169,6 @@ export default function SignUpForm() {
                 onChange={field.onChange}
                 onBlur={field.onBlur}
                 disabled={false}
-                maskChar=" "
               >
                 <TextField
                   {...field}
@@ -192,7 +198,6 @@ export default function SignUpForm() {
                 onChange={field.onChange}
                 onBlur={field.onBlur}
                 disabled={false}
-                maskChar=" "
               >
                 <TextField
                   {...field}
@@ -251,9 +256,6 @@ export default function SignUpForm() {
             <p className="text-red-500">{errors.passwordrepeat.message}</p>
           )}
         </Box>
-        {state?.message !== '' && (
-          <div className="text-red-500">{state.message}</div>
-        )}
         <SubmitBtn label="CRIAR CONTA" />
       </Box>
     </Container>

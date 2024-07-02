@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 import { LoginFormValues } from '.'
 
 export type FormState = {
+  type: 'success' | 'error'
   message: string
   fields?: LoginFormValues
 }
@@ -14,16 +15,26 @@ export const submitLogin = async (
 ): Promise<FormState> => {
   const { username, password } = Object.fromEntries(data)
 
-  const res = await fetch(process.env.ROOT_URL + '/auth/login', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ username, password }),
-  })
-  const json = await res.json()
+  try {
+    const res = await fetch(process.env.ROOT_URL + '/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username, password }),
+    })
+    const json = await res.json()
 
-  if (res.ok) {
+    if (!res.ok) {
+      return {
+        type: 'error',
+        message: json.message,
+        fields: {
+          username: username.toString(),
+          password: password.toString(),
+        },
+      }
+    }
     cookies().set('Authorization', json.access_token, {
       secure: true,
       httpOnly: true,
@@ -31,10 +42,16 @@ export const submitLogin = async (
       path: '/',
       sameSite: 'strict',
     })
-    redirect('/app')
-  } else {
     return {
+      type: 'success',
       message: json.message,
+      fields: { username: username.toString(), password: password.toString() },
+    }
+  } catch (e: unknown) {
+    const error = e as Error
+    return {
+      type: 'error',
+      message: error.message,
       fields: { username: username.toString(), password: password.toString() },
     }
   }
